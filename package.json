@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "start -- --username=vasya": "node index.js"
+    "start -- --username=John": "node index.js",
+    "vv": "node -e \"console.log('exit')\""
   },
   "type": "module",
   "keywords": [],
