@@ -13,7 +13,7 @@ export class FileManager {
   #currentDirectory = this.#systemUser.folder
 
   #sayGoodbyeToTheUser = () => {
-    stdout.write(`Thank you for using File Manager, ${this.#userName}!`)
+    stdout.write(`\nThank you for using File Manager, ${this.#userName}!`)
   }
 
   #sayHiToTheUser = () => {

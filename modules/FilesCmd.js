@@ -1,6 +1,8 @@
 import path from "path"
+import { mkdir } from 'fs/promises'
 import { stdout } from "process"
 import { createReadStream, createWriteStream } from 'fs'
+import {lstat} from "fs/promises"
 
 export class FilesCommand {
   #command
@@ -40,7 +42,7 @@ export class FilesCommand {
 
   async add() {
     if (this.#args.length !== 1)
-      throw new Error(`For cat command expected 1 argument`
+      throw new Error(`For add command expected 1 argument`
         + `get ${this.#args.length}`
       )
 
@@ -51,28 +53,75 @@ export class FilesCommand {
 
     await new Promise((resolve, reject) => {
       createWriteStream(pathToFile, {"flags":"ax"})
-        .on('error', err => {
-          console.log('rejected')
-          reject(err)
-        })
+        .on('error', reject)
         .end(() => setInterval(resolve))
     })
   }
 
-  rn() {
+  async rn() {
+    if (this.#args.length !== 2)
+      throw new Error(`For rn command expected 2 argument`
+        + `get ${this.#args.length}`
+      )
 
+    const pathToFile = path.resolve(
+      this.#currentDirectory,
+      path.normalize(this.#args[0])
+    )
+
+    if ((await lstat(pathToFile)).isDirectory())
+      throw new Error(`For rn command 1-st argument must `
+        + `contain path to file, not folder`
+      )
+
+    const pathToNewFile = path.resolve(
+      this.#currentDirectory,
+      path.resolve(
+        path.dirname(pathToFile),
+        path.normalize(this.#args[1])
+      )
+    )
+
+    if ((await lstat(pathToFile)).isDirectory())
+      throw new Error(`For rn command 2-nd argument must `
+        + `contain path to file, not folder`
+      )
+
+    await mkdir(path.dirname(pathToNewFile), {recursive: true})
+
+    await new Promise((resolve, reject) => {
+      const readStream = createReadStream(pathToFile)
+        .on('error', reject)
+        .on('end', resolve)
+
+      const writeStream = createWriteStream(pathToNewFile, {flags: 'ax'})
+        .on('error', reject)
+
+      readStream
+        .pipe(writeStream)
+    })
   }
 
   cp() {
+    if (this.#args.length !== 2)
+      throw new Error(`For cp command expected 2 argument`
+        + `get ${this.#args.length}`
+      )
 
   }
 
   mv() {
-
+    if (this.#args.length !== 2)
+      throw new Error(`For mv command expected 2 argument`
+        + `get ${this.#args.length}`
+      )
   }
 
   rm() {
-
+    if (this.#args.length !== 1)
+      throw new Error(`For rm command expected 1 argument`
+        + `get ${this.#args.length}`
+      )
   }
 
   async execute() {
