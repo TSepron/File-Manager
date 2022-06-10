@@ -3,6 +3,7 @@ import readline from "readline"
 import { COMMANDS } from "./commands.js"
 import { NavigationCommand } from "./NavigationCmd.js"
 import { FilesCommand } from "./FilesCmd.js"
+import { OperatingSystemInfoCommand } from "./OperatingSystemInfoCmd.js"
 
 export class FileManager {
   #userName
@@ -66,6 +67,16 @@ export class FileManager {
         return
       }
 
+      if (COMMANDS.OPERATING_SYSTEM_INFO.includes(command)) {
+        await (new OperatingSystemInfoCommand({
+          command,
+          args,
+          systemUser: this.#systemUser
+        })
+          .execute())
+
+        return
+      }
 
 
 
@@ -88,19 +99,21 @@ export class FileManager {
     rl.on('line', async input => {
       console.log('')
       //change list of available commands in ./commands.js
-      const [command, ...args] = this.parseInput(input)
+      const [command = '', ...args] = this.parseInput(input)
 
-      rl.pause()
+      if (command !== '') {
+        rl.pause()
 
-      try {
-        await this.execute(command, args)
-      } catch (err) {
-        console.log('\n' + err.message)
+        try {
+          await this.execute(command, args)
+        } catch (err) {
+          console.log('\n' + err.message)
+        }
+
+        rl.resume()
       }
 
       this.#sayCurrentDirectory()
-
-      rl.resume()
     })
 
     process.on('SIGINT', process.exit)  // CTRL+C
