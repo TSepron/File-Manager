@@ -58,6 +58,7 @@ export class FilesCommand {
     })
   }
 
+  // todo delete
   async rn() {
     if (this.#args.length !== 2)
       throw new Error(`For rn command expected 2 argument`
@@ -82,11 +83,6 @@ export class FilesCommand {
       )
     )
 
-    if ((await lstat(pathToFile)).isDirectory())
-      throw new Error(`For rn command 2-nd argument must `
-        + `contain path to file, not folder`
-      )
-
     await mkdir(path.dirname(pathToNewFile), {recursive: true})
 
     await new Promise((resolve, reject) => {
@@ -102,12 +98,49 @@ export class FilesCommand {
     })
   }
 
-  cp() {
-    if (this.#args.length !== 2)
-      throw new Error(`For cp command expected 2 argument`
-        + `get ${this.#args.length}`
+  async cp() {
+    try {
+      if (this.#args.length !== 2)
+        throw new Error(`For cp command expected 2 argument`
+          + `get ${this.#args.length}`
+        )
+
+      const pathToFile = path.resolve(
+        this.#currentDirectory,
+        path.normalize(this.#args[0])
+      )
+      const fileName = path.basename(pathToFile)
+
+      if ((await lstat(pathToFile)).isDirectory())
+        throw new Error(`For cp command 1-st argument must `
+          + `contain path to file, not folder`
+        )
+
+      const pathToNewDirectory = path.resolve(
+        this.#currentDirectory,
+        path.normalize(this.#args[1])
       )
 
+      await mkdir(pathToNewDirectory, {recursive: true})
+
+      await new Promise((resolve, reject) => {
+        const readStream = createReadStream(pathToFile)
+          .on('error', reject)
+          .on('end', resolve)
+
+        const writeStream = createWriteStream(
+          path.resolve(pathToNewDirectory, fileName),
+          {flags: 'ax'}
+        )
+          .on('error', reject)
+
+        readStream
+          .pipe(writeStream)
+      })
+      console.log('cp end')
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   mv() {
