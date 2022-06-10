@@ -29,7 +29,7 @@ export class NavigationCommand {
   }
 
   cd() {
-
+    console.log(path.parse(this.#currentDirectory))
   }
 
   async ls() {
