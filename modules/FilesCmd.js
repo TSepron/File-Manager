@@ -1,6 +1,6 @@
 import path from "path"
 import { stdout } from "process"
-import { createReadStream } from 'fs'
+import { createReadStream, createWriteStream } from 'fs'
 
 export class FilesCommand {
   #command
@@ -38,8 +38,25 @@ export class FilesCommand {
     console.log('')
   }
 
-  add() {
+  async add() {
+    if (this.#args.length !== 1)
+      throw new Error(`For cat command expected 1 argument`
+        + `get ${this.#args.length}`
+      )
 
+    const pathToFile = path.resolve(
+      this.#currentDirectory,
+      path.normalize(this.#args[0])
+    )
+
+    await new Promise((resolve, reject) => {
+      createWriteStream(pathToFile, {"flags":"ax"})
+        .on('error', err => {
+          console.log('rejected')
+          reject(err)
+        })
+        .end(() => setInterval(resolve))
+    })
   }
 
   rn() {
