@@ -1,5 +1,5 @@
 import path from "path"
-import { mkdir } from 'fs/promises'
+import { mkdir, rm } from 'fs/promises'
 import { stdout } from "process"
 import { createReadStream, createWriteStream } from 'fs'
 import {lstat} from "fs/promises"
@@ -99,55 +99,59 @@ export class FilesCommand {
   }
 
   async cp() {
-    try {
-      if (this.#args.length !== 2)
-        throw new Error(`For cp command expected 2 argument`
-          + `get ${this.#args.length}`
-        )
-
-      const pathToFile = path.resolve(
-        this.#currentDirectory,
-        path.normalize(this.#args[0])
-      )
-      const fileName = path.basename(pathToFile)
-
-      if ((await lstat(pathToFile)).isDirectory())
-        throw new Error(`For cp command 1-st argument must `
-          + `contain path to file, not folder`
-        )
-
-      const pathToNewDirectory = path.resolve(
-        this.#currentDirectory,
-        path.normalize(this.#args[1])
+    if (this.#args.length !== 2)
+      throw new Error(`For cp command expected 2 argument`
+        + `get ${this.#args.length}`
       )
 
-      await mkdir(pathToNewDirectory, {recursive: true})
+    const pathToFile = path.resolve(
+      this.#currentDirectory,
+      path.normalize(this.#args[0])
+    )
+    const fileName = path.basename(pathToFile)
 
-      await new Promise((resolve, reject) => {
-        const readStream = createReadStream(pathToFile)
-          .on('error', reject)
-          .on('end', resolve)
+    if ((await lstat(pathToFile)).isDirectory())
+      throw new Error(`For cp command 1-st argument must `
+        + `contain path to file, not folder`
+      )
 
-        const writeStream = createWriteStream(
-          path.resolve(pathToNewDirectory, fileName),
-          {flags: 'ax'}
-        )
-          .on('error', reject)
+    const pathToNewDirectory = path.resolve(
+      this.#currentDirectory,
+      path.normalize(this.#args[1])
+    )
 
-        readStream
-          .pipe(writeStream)
-      })
-      console.log('cp end')
-    } catch (e) {
-      console.log(e)
-    }
+    await mkdir(pathToNewDirectory, {recursive: true})
+
+    await new Promise((resolve, reject) => {
+      const readStream = createReadStream(pathToFile)
+        .on('error', reject)
+        .on('end', resolve)
+
+      const writeStream = createWriteStream(
+        path.resolve(pathToNewDirectory, fileName),
+        {flags: 'ax'}
+      )
+        .on('error', reject)
+
+      readStream
+        .pipe(writeStream)
+    })
   }
 
-  mv() {
+  async mv() {
     if (this.#args.length !== 2)
       throw new Error(`For mv command expected 2 argument`
         + `get ${this.#args.length}`
       )
+
+    await this.cp()
+
+    const pathToFile = path.resolve(
+      this.#currentDirectory,
+      path.normalize(this.#args[0])
+    )
+
+    await rm(pathToFile)
   }
 
   rm() {
