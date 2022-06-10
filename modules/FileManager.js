@@ -1,6 +1,7 @@
-import { stdin, stdout} from "process"
+import { stdin, stdout } from "process"
 import readline from "readline"
-import os from "os"
+import { COMMANDS } from "./commands.js"
+import { NavigationCommand } from "./NavigationCmd.js"
 
 export class FileManager {
   #userName
@@ -9,9 +10,6 @@ export class FileManager {
     folder: process.env.HOME
   }
   #currentDirectory = this.#systemUser.folder
-  #systemRootDirectory = os.platform() === 'win32'
-    ? process.env.SYSTEMDRIVE
-    : process.env.SYSTEMROOT
 
   #sayGoodbyeToTheUser = () => {
     stdout.write(`Thank you for using File Manager, ${this.#userName}!\n`)
@@ -22,7 +20,7 @@ export class FileManager {
   }
 
   #sayCurrentDirectory = () => {
-    console.log(`You are currently in ${this.#currentDirectory}`)
+    console.log(`\nYou are currently in ${this.#currentDirectory}\n`)
   }
 
   constructor(userName = 'guest') {
@@ -35,23 +33,51 @@ export class FileManager {
       .filter(arg => arg !== '')
   }
 
+  async execute(command, args) {
+    if (COMMANDS.EXIT.includes(command)) {
+      process.exit()
+    }
+
+    if (COMMANDS.NAVIGATION.includes(command)) {
+      const updatedDirectory = new NavigationCommand({
+        command,
+        args,
+        currentDirectory: this.#currentDirectory
+      })
+        .execute()
+        .getUpdatedDirectory()
+
+      this.#currentDirectory = updatedDirectory
+      return
+    }
+
+    throw new Error('Invalid input')
+  }
+
   run() {
     this.#sayHiToTheUser()
 
-    process.on('SIGINT', process.exit)  // CTRL+C
-
-    process.on('exit', this.#sayGoodbyeToTheUser)
-
     const rl = readline.createInterface({
       input: stdin,
-      output: stdout
     })
 
-    rl.on('line', input => {
+    rl.on('line', async input => {
+      //change list of available commands in ./commands.js
       const [command, ...args] = this.parseInput(input)
 
-      console.log(command, args)
+      try {
+        rl.pause()
+        await this.execute(command, args)
+        rl.resume()
+
+        this.#sayCurrentDirectory()
+      } catch {
+        console.log('Invalid input\n')
+      }
     })
+
+    process.on('SIGINT', process.exit)  // CTRL+C
+    process.on('exit', this.#sayGoodbyeToTheUser)
 
     this.#sayCurrentDirectory()
   }
