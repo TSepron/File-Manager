@@ -5,6 +5,7 @@ import { NavigationCommand } from "./NavigationCmd.js"
 import { FilesCommand } from "./FilesCmd.js"
 import { OperatingSystemInfoCommand } from "./OperatingSystemInfoCmd.js"
 import { HashCommand } from "./HashCmd.js"
+import { ZLIBCmd } from "./ZLIBCmd.js"
 
 export class FileManager {
   #userName
@@ -81,6 +82,17 @@ export class FileManager {
 
       if (COMMANDS.HASH.includes(command)) {
         await (new HashCommand({
+          command,
+          args,
+          currentDirectory: this.#currentDirectory
+        })
+          .execute())
+
+        return
+      }
+
+      if (COMMANDS.ZLIB.includes(command)) {
+        await (new ZLIBCmd({
           command,
           args,
           currentDirectory: this.#currentDirectory
