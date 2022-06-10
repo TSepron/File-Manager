@@ -16,11 +16,11 @@ export class FileManager {
   }
 
   #sayHiToTheUser = () => {
-    console.log(`Welcome to the File Manager, ${this.#userName}!\n`)
+    console.log(`Welcome to the File Manager, ${this.#userName}!`)
   }
 
   #sayCurrentDirectory = () => {
-    console.log(`You are currently in ${this.#currentDirectory}\n`)
+    console.log(`\nYou are currently in ${this.#currentDirectory}\n`)
   }
 
   constructor(userName = 'guest') {
@@ -34,21 +34,25 @@ export class FileManager {
   }
 
   async execute(command, args) {
-    if (COMMANDS.EXIT.includes(command)) {
-      process.exit()
-    }
+    try {
+      if (COMMANDS.EXIT.includes(command)) {
+        process.exit()
+      }
 
-    if (COMMANDS.NAVIGATION.includes(command)) {
-      const updatedDirectory = (await new NavigationCommand({
-        command,
-        args,
-        currentDirectory: this.#currentDirectory
-      })
-        .execute())
-        .getUpdatedDirectory()
+      if (COMMANDS.NAVIGATION.includes(command)) {
+        const updatedDirectory = (await new NavigationCommand({
+          command,
+          args,
+          currentDirectory: this.#currentDirectory
+        })
+          .execute())
+          .getUpdatedDirectory()
 
-      this.#currentDirectory = updatedDirectory
-      return
+        this.#currentDirectory = updatedDirectory
+        return
+      }
+    } catch {
+      throw new Error('Operation failed')
     }
 
     throw new Error('Invalid input')
@@ -62,7 +66,6 @@ export class FileManager {
     })
 
     rl.on('line', async input => {
-      console.log('')
       //change list of available commands in ./commands.js
       const [command, ...args] = this.parseInput(input)
 
@@ -70,10 +73,11 @@ export class FileManager {
 
       try {
         await this.execute(command, args)
-        this.#sayCurrentDirectory()
-      } catch {
-        console.log('Invalid input\n')
+      } catch (err) {
+        console.log(err.message)
       }
+
+      this.#sayCurrentDirectory()
 
       rl.resume()
     })

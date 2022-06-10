@@ -1,6 +1,6 @@
 import os from "os"
 import path from "path"
-import { readdir } from 'fs/promises'
+import { readdir, lstat } from 'fs/promises'
 
 export class NavigationCommand {
   #command
@@ -28,13 +28,34 @@ export class NavigationCommand {
     this.#currentDirectory = path.resolve(this.#currentDirectory, '..')
   }
 
-  cd() {
-    console.log(path.parse(this.#currentDirectory))
+  async cd() {
+    if (this.#args.length !== 1)
+      throw new Error(`For cd command expected 1 argument`
+        + `get ${this.#args.length}`
+      )
+
+    const pathToNewDirectory = path.normalize(this.#args[0])
+
+    if (
+      path.relative(this.#currentDirectory, pathToNewDirectory)
+        .includes('..')
+    )
+      throw new Error(`Path argument should be in `
+        + `current directory`
+      )
+
+    const newDirectory = path.resolve(this.#currentDirectory, pathToNewDirectory)
+
+    if (!(await lstat(newDirectory)).isDirectory())
+      throw new Error(`For cd command argument must `
+        + `contain path to folder, not file`
+      )
+
+    this.#currentDirectory = newDirectory
   }
 
   async ls() {
     console.log(await readdir(this.#currentDirectory))
-    console.log('')
   }
 
   async execute() {
