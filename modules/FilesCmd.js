@@ -154,11 +154,18 @@ export class FilesCommand {
     await rm(pathToFile)
   }
 
-  rm() {
+  async rm() {
     if (this.#args.length !== 1)
       throw new Error(`For rm command expected 1 argument`
         + `get ${this.#args.length}`
       )
+
+    const pathToFile = path.resolve(
+      this.#currentDirectory,
+      path.normalize(this.#args[0])
+    )
+
+    await rm(pathToFile)
   }
 
   async execute() {
