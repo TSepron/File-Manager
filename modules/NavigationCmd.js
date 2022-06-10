@@ -1,5 +1,6 @@
 import os from "os"
 import path from "path"
+import { readdir } from 'fs/promises'
 
 export class NavigationCommand {
   #command
@@ -31,12 +32,13 @@ export class NavigationCommand {
 
   }
 
-  ls() {
-
+  async ls() {
+    console.log(await readdir(this.#currentDirectory))
+    console.log('')
   }
 
-  execute() {
-    this[this.#command]()
+  async execute() {
+    await this[this.#command]()
     return this
   }
 

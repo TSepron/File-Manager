@@ -12,7 +12,7 @@ export class FileManager {
   #currentDirectory = this.#systemUser.folder
 
   #sayGoodbyeToTheUser = () => {
-    stdout.write(`Thank you for using File Manager, ${this.#userName}!\n`)
+    stdout.write(`Thank you for using File Manager, ${this.#userName}!`)
   }
 
   #sayHiToTheUser = () => {
@@ -20,7 +20,7 @@ export class FileManager {
   }
 
   #sayCurrentDirectory = () => {
-    console.log(`\nYou are currently in ${this.#currentDirectory}\n`)
+    console.log(`You are currently in ${this.#currentDirectory}\n`)
   }
 
   constructor(userName = 'guest') {
@@ -39,12 +39,12 @@ export class FileManager {
     }
 
     if (COMMANDS.NAVIGATION.includes(command)) {
-      const updatedDirectory = new NavigationCommand({
+      const updatedDirectory = (await new NavigationCommand({
         command,
         args,
         currentDirectory: this.#currentDirectory
       })
-        .execute()
+        .execute())
         .getUpdatedDirectory()
 
       this.#currentDirectory = updatedDirectory
@@ -62,18 +62,20 @@ export class FileManager {
     })
 
     rl.on('line', async input => {
+      console.log('')
       //change list of available commands in ./commands.js
       const [command, ...args] = this.parseInput(input)
 
-      try {
-        rl.pause()
-        await this.execute(command, args)
-        rl.resume()
+      rl.pause()
 
+      try {
+        await this.execute(command, args)
         this.#sayCurrentDirectory()
       } catch {
         console.log('Invalid input\n')
       }
+
+      rl.resume()
     })
 
     process.on('SIGINT', process.exit)  // CTRL+C
