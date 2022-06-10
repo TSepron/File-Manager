@@ -1,4 +1,3 @@
-import os from "os"
 import path from "path"
 import { readdir, lstat } from 'fs/promises'
 
@@ -6,9 +5,6 @@ export class NavigationCommand {
   #command
   #args
   #currentDirectory
-  #systemRootDirectory = os.platform() === 'win32'
-    ? process.env.SYSTEMDRIVE
-    : process.env.SYSTEMROOT
 
   constructor({command, args, currentDirectory} = {}) {
     if (command == null) {

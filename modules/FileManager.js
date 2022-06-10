@@ -2,6 +2,7 @@ import { stdin, stdout } from "process"
 import readline from "readline"
 import { COMMANDS } from "./commands.js"
 import { NavigationCommand } from "./NavigationCmd.js"
+import { FilesCommand } from "./FilesCmd.js"
 
 export class FileManager {
   #userName
@@ -35,9 +36,11 @@ export class FileManager {
 
   async execute(command, args) {
     try {
-      if (COMMANDS.EXIT.includes(command)) {
+
+
+
+      if (COMMANDS.EXIT.includes(command))
         process.exit()
-      }
 
       if (COMMANDS.NAVIGATION.includes(command)) {
         const updatedDirectory = (await new NavigationCommand({
@@ -51,6 +54,23 @@ export class FileManager {
         this.#currentDirectory = updatedDirectory
         return
       }
+
+      if (COMMANDS.FILES.includes(command)) {
+        await (new FilesCommand({
+          command,
+          args,
+          currentDirectory: this.#currentDirectory
+        })
+          .execute())
+
+        return
+      }
+
+
+
+
+
+
     } catch {
       throw new Error('Operation failed')
     }
@@ -66,6 +86,7 @@ export class FileManager {
     })
 
     rl.on('line', async input => {
+      console.log('')
       //change list of available commands in ./commands.js
       const [command, ...args] = this.parseInput(input)
 
@@ -74,7 +95,7 @@ export class FileManager {
       try {
         await this.execute(command, args)
       } catch (err) {
-        console.log(err.message)
+        console.log('\n' + err.message)
       }
 
       this.#sayCurrentDirectory()
