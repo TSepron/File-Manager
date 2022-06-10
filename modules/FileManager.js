@@ -4,6 +4,7 @@ import { COMMANDS } from "./commands.js"
 import { NavigationCommand } from "./NavigationCmd.js"
 import { FilesCommand } from "./FilesCmd.js"
 import { OperatingSystemInfoCommand } from "./OperatingSystemInfoCmd.js"
+import { HashCommand } from "./HashCmd.js"
 
 export class FileManager {
   #userName
@@ -78,8 +79,16 @@ export class FileManager {
         return
       }
 
+      if (COMMANDS.HASH.includes(command)) {
+        await (new HashCommand({
+          command,
+          args,
+          currentDirectory: this.#currentDirectory
+        })
+          .execute())
 
-
+        return
+      }
 
 
     } catch {
